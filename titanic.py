@@ -33,18 +33,21 @@ print()
 print('-----TASK 2-----')
 print('Results in graphs/')
 print()
+# Fetch number of survivors and compute percentages
 survivors = titanic[titanic['Survived'] == 1].shape[0]
 survival_rate = survivors * 100 / nr_rows
 death_rate = 100 - survival_rate
+# Fetch number of people for each class and compute percentages
 first_class = titanic[titanic['Pclass'] == 1].shape[0]
 first_class_percentage = first_class * 100 / nr_rows
 second_class = titanic[titanic['Pclass'] == 2].shape[0]
 second_class_percentage = second_class * 100 / nr_rows
-third_class = titanic[titanic['Pclass'] == 3].shape[0]
-third_class_percentage = third_class * 100 / nr_rows
+third_class_percentage = 100 - first_class_percentage - second_class_percentage
+# Fetch number of males and females and compute percentages
 males = titanic[titanic['Sex'] == 'male'].shape[0]
 male_percentage = males * 100 / nr_rows
 female_percentage = 100 - male_percentage
+# Draw pie plots for each percentage set
 fig, axes = plt.subplots(nrows = 1, ncols = 3)
 values_list = [survival_rate, death_rate]
 plt.rcParams.update({'font.size': 8})
@@ -58,28 +61,35 @@ axes[2].pie(values_list, labels=['Males', 'Females'], autopct='%.2f%%')
 axes[2].set_title('Gender Distribution', fontsize = 12)
 plt.tight_layout()
 plt.savefig('graphs/task-2-stats.png')
+plt.close()
 
 # TASK 3
 print('-----TASK 3-----')
 print('Results in graphs/')
 print()
 for col in columns:
+    # Determine columns with numerical values
     if (titanic[col].dtype in ('int64', 'float64') and col != 'PassengerId'):
+        # Plot the values in the found columns
         plt.figure()
         titanic[col].hist()
         plt.title(col, fontsize = 12)
         plt.xlabel(col, fontsize = 10)
         plt.ylabel('Number of people', fontsize = 10)
-        plt.savefig(f"graphs/{col}.png")
+        plt.savefig(f"graphs/task-3-{col.lower()}.png")
+        plt.close()
 
 # TASK 4
 print('-----TASK 4-----')
 print()
 for col in columns:
+    # Determine columns with missing values
     if titanic[col].dropna().count() != nr_rows:
+        # Compute the number of missing values in each found column and percentages
         missing = nr_rows - titanic[col].dropna().count()
         proportion = missing * 100 / nr_rows
         print(f"{col} missing {proportion:.2f}% values ({missing} out of {nr_rows})")
+        # Do the same but take into account whether the people survived or not
         temp = titanic[['Survived', col]]
         temp = temp[temp.isnull().any(axis = 1)]
         missing_survived = temp[temp['Survived'] == 1].shape[0]
@@ -93,6 +103,69 @@ print()
 # TASK 5
 print('-----TASK 5-----')
 print()
+# Set bins and indexes for separating age categories
+bins = [0, 20, 40, 60, titanic['Age'].max() + 1]
+labels = [1, 2, 3, 4]
+titanic['AgeCat'] = pd.cut(titanic['Age'], bins = bins, labels = labels, right = False)
+# Count passagers in each age category
+age_counts = titanic['AgeCat'].value_counts().sort_index()
+print("Number of people in each age category:")
+print(age_counts)
+# Add new column
+titanic.to_csv('data/new_train.csv')
 plt.figure()
-titanic['Age'].hist(bins = [0, 20, 40, 60, titanic['Age'].max()])
-plt.savefig('graphs/task-5-ages.png')
+categories = ['1', '2', '3', '4']
+bars = plt.bar(categories, age_counts.values)
+for bar in bars:
+    yval = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2, yval + 1, int(yval), ha='center', va='bottom')
+plt.title('Age Categories', fontsize = 12)
+plt.xlabel('Age category', fontsize = 10)
+plt.ylabel('Number of people', fontsize = 10)
+plt.savefig('graphs/task-5-stats.png')
+plt.close()
+print()
+
+# TASK 6
+print('-----TASK 6-----')
+print()
+men = titanic[titanic['Sex'] == 'male']
+survived_counts = men[men['Survived'] == 1]['AgeCat'].value_counts().sort_index()
+total_counts = men['AgeCat'].value_counts().sort_index()
+survival_rates = survived_counts * 100 / total_counts
+print("Number of male survivors for each age category:")
+print(survived_counts)
+plt.figure()
+categories = ['1', '2', '3', '4']
+bars = plt.bar(categories, survival_rates)
+for bar in bars:
+    yval = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2, yval + 0.3, f"{yval:.2f}%", ha='center', va='bottom')
+plt.title('Age category influence on survival rates', fontsize = 12)
+plt.xlabel('Age category', fontsize = 10)
+plt.ylabel('Survival rate', fontsize = 10)
+plt.savefig('graphs/task-6-stats.png')
+plt.close()
+print()
+
+# TASK 7
+print('-----TASK 7-----')
+print()
+children = titanic[titanic['Age'] < 18]
+children_proportion = children.shape[0] * 100 / nr_rows
+print(f"Percentage of children: {children_proportion:.2f}%")
+adults = titanic[titanic['Age'] >= 18]
+children_survival_rate = children[children['Survived'] == 1].shape[0] * 100 / children.shape[0]
+adults_survival_rate = adults[adults['Survived'] == 1].shape[0] * 100 / adults.shape[0]
+plt.figure()
+categories = ['Children', 'Adults']
+values = [children_survival_rate, adults_survival_rate]
+bars = plt.bar(categories, values)
+for bar in bars:
+    yval = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2, yval + 0.3, f"{yval:.2f}%", ha='center', va='bottom')
+plt.title('Children vs. Adult survival rates', fontsize = 12)
+plt.ylabel('Survival rate', fontsize = 10)
+plt.savefig('graphs/task-7-stats.png')
+plt.close()
+print()

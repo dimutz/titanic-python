@@ -165,7 +165,7 @@ bars = plt.bar(categories, survival_rates)
 for bar in bars:
     yval = bar.get_height()
     plt.text(bar.get_x() + bar.get_width()/2, yval + 0.3, f"{yval:.2f}%", ha='center', va='bottom')
-plt.title('Age category influence on survival rates', fontsize = 12)
+plt.title('Age category influence on survival rates for men', fontsize = 12)
 plt.xlabel('Age category', fontsize = 10)
 plt.ylabel('Survival rate', fontsize = 10)
 plt.savefig('graphs/task-6-stats.png')
